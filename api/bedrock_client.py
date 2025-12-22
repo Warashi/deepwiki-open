@@ -1,5 +1,6 @@
 """AWS Bedrock ModelClient integration."""
 
+import asyncio
 import os
 import json
 import logging
@@ -440,9 +441,8 @@ class BedrockClient(ModelClient):
 
     async def acall(self, api_kwargs: Dict = None, model_type: ModelType = None) -> Any:
         """Make an asynchronous call to the AWS Bedrock API."""
-        # For now, just call the sync method
-        # In a real implementation, you would use an async library or run the sync method in a thread pool
-        return self.call(api_kwargs, model_type)
+        # For now, just call the sync method with asyncio.to_thread
+        return await asyncio.to_thread(self.call, api_kwargs, model_type)
 
     def convert_inputs_to_api_kwargs(
         self, input: Any = None, model_kwargs: Dict = None, model_type: ModelType = None
