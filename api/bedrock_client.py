@@ -42,6 +42,7 @@ class BedrockClient(ModelClient):
         aws_session_token: Optional[str] = None,
         aws_region: Optional[str] = None,
         aws_role_arn: Optional[str] = None,
+        aws_role_session_name: Optional[str] = None,
         *args,
         **kwargs
     ) -> None:
@@ -53,6 +54,7 @@ class BedrockClient(ModelClient):
             aws_session_token: AWS session token. If not provided, will use environment variable AWS_SESSION_TOKEN.
             aws_region: AWS region. If not provided, will use environment variable AWS_REGION.
             aws_role_arn: AWS IAM role ARN for role-based authentication. If not provided, will use environment variable AWS_ROLE_ARN.
+            aws_role_session_name: AWS IAM role session name. If not provided, will use environment variable AWS_ROLE_SESSION_NAME.
         """
         super().__init__(*args, **kwargs)
         from api.config import (
@@ -61,6 +63,7 @@ class BedrockClient(ModelClient):
             AWS_SESSION_TOKEN,
             AWS_REGION,
             AWS_ROLE_ARN,
+            AWS_ROLE_SESSION_NAME,
         )
 
         self.aws_access_key_id = aws_access_key_id or AWS_ACCESS_KEY_ID
@@ -68,6 +71,7 @@ class BedrockClient(ModelClient):
         self.aws_session_token = aws_session_token or AWS_SESSION_TOKEN
         self.aws_region = aws_region or AWS_REGION or "us-east-1"
         self.aws_role_arn = aws_role_arn or AWS_ROLE_ARN
+        self.aws_role_session_name = aws_role_session_name or AWS_ROLE_SESSION_NAME or "DeepWikiBedrockSession"
         
         self.sync_client = self.init_sync_client()
         self.async_client = None  # Initialize async client only when needed
@@ -85,6 +89,7 @@ class BedrockClient(ModelClient):
             "aws_session_token": self.aws_session_token,
             "aws_region": self.aws_region,
             "aws_role_arn": self.aws_role_arn,
+            "aws_role_session_name": self.aws_role_session_name,
         }
 
     def __getstate__(self):
@@ -126,7 +131,7 @@ class BedrockClient(ModelClient):
                 sts_client = session.client('sts')
                 assumed_role = sts_client.assume_role(
                     RoleArn=self.aws_role_arn,
-                    RoleSessionName="DeepWikiBedrockSession"
+                    RoleSessionName=self.aws_role_session_name,
                 )
                 credentials = assumed_role['Credentials']
                 
